@@ -1,0 +1,1 @@
+drop table if exists akreditasi_fakultas;
