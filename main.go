@@ -22,7 +22,7 @@ func main() {
 		response := Response{
 			Status: "success",
 			Message: "Succsessfully Get Data",
-			// Skills: []string{"Golang", "Python", "Java"},
+			Skills: []string{"Golang", "Python", "Java"},
 			Data: DataUser{
 				Name: "John Doe",
 				Email: "john@gmail.com",
