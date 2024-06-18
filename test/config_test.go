@@ -11,7 +11,7 @@ func TestViper(t *testing.T) {
 	config := viper.New()
 	config.SetConfigName("config")
 	config.SetConfigType("yaml")
-	config.AddConfigPath("../../")
+	config.AddConfigPath("../")
 	config.AutomaticEnv()
 
 	//read config
