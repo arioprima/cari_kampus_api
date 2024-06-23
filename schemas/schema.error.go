@@ -1,9 +1,10 @@
 package schemas
 
 type SchemaDatabaseError struct {
-	Code   int         `json:"code"`
-	Status string      `json:"status"`
-	Error  interface{} `json:"error"`
+	Code    int         `json:"code"`
+	Type    string      `json:"type"`
+	Error   interface{} `json:"error"`
+	Message string      `json:"message"`
 }
 
 type SchemaErrorResponse struct {
