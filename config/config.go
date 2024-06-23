@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -16,19 +17,20 @@ type Database struct {
 
 type Email struct {
 	EmailFrom string `mapstructure:"from"`
-	SMTPHost string `mapstructure:"host"`
-	SMTPPass string `mapstructure:"password"`
-	SMTPPort int `mapstructure:"port"`
-	SMTPUser string `mapstructure:"user"`
+	SMTPHost  string `mapstructure:"host"`
+	SMTPPass  string `mapstructure:"password"`
+	SMTPPort  int    `mapstructure:"port"`
+	SMTPUser  string `mapstructure:"user"`
 }
 
 type Config struct {
-	PORT string `mapstructure:"PORT"`
-	ClientOrigin string `mapstructure:"origin"`
-	TokenSecret string `mapstructure:"secret"`
-	TokenMaxAge int `mapstructure:"maxage"`
-	Database Database `mapstructure:"database"`
-	Email Email `mapstructure:"email"`
+	PORT         string        `mapstructure:"port"`
+	ClientOrigin string        `mapstructure:"client_origin"`
+	TokenSecret  string        `mapstructure:"secret_key"`
+	TokenMaxAge  int           `mapstructure:"max_age"`
+	TokenExpired time.Duration `mapstructure:"expire_time"`
+	Database     Database      `mapstructure:"database"`
+	Email        Email         `mapstructure:"email"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
@@ -38,7 +40,7 @@ func LoadConfig(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
 	viper.AutomaticEnv()
 
-	err = viper.ReadInConfig();
+	err = viper.ReadInConfig()
 	if err != nil {
 		log.Fatalf("Error reading config file, %s", err)
 	}

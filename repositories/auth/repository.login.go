@@ -33,27 +33,21 @@ func (r *repositoryLoginImpl) Login(ctx context.Context, input *schemas.SchemaAu
 	if err := db.Where("email = ?", input.Email).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, &schemas.SchemaDatabaseError{
-				Code:    http.StatusNotFound,
-				Type:    "error_01",
-				Error:   err.Error(),
-				Message: "User not found",
+				Code: http.StatusNotFound,
+				Type: "error_01",
 			}
 		}
 		return nil, &schemas.SchemaDatabaseError{
-			Code:    http.StatusInternalServerError,
-			Type:    "error_02",
-			Error:   err.Error(),
-			Message: "Internal server error",
+			Code: http.StatusInternalServerError,
+			Type: "error_02",
 		}
 	}
 
 	comparePassword := pkg.ComparePassword(user.Password, input.Password)
 	if comparePassword != nil {
 		return nil, &schemas.SchemaDatabaseError{
-			Code:    http.StatusUnauthorized,
-			Type:    "error_03",
-			Error:   comparePassword.Error(),
-			Message: "Password not match",
+			Code: http.StatusUnauthorized,
+			Type: "error_03",
 		}
 	}
 
