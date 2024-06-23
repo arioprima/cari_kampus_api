@@ -16,3 +16,14 @@ type SchemaUnauthorizedResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
 }
+
+type ErrorMetaConfig struct {
+	Tag     string `json:"tag"`
+	Field   string `json:"field"`
+	Message string `json:"message"`
+	Value   string `json:"value,omitempty"`
+}
+
+type ErrorConfig struct {
+	Options []ErrorMetaConfig `json:"options"`
+}
