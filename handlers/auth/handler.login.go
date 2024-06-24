@@ -59,21 +59,30 @@ func (h *HandlerLogin) LoginHandler(ctx *gin.Context) {
 	if err != nil {
 		switch err.Type {
 		case "error_01":
-			helpers.ApiResponse(ctx, http.StatusNotFound, "error", "Email not found", nil)
+			helpers.ApiResponse(ctx, http.StatusNotFound, "error", "Email not found", nil, nil)
 			return
 		case "error_02":
-			helpers.ApiResponse(ctx, http.StatusInternalServerError, "error", "Internal server error", nil)
+			helpers.ApiResponse(ctx, http.StatusInternalServerError, "error", "Internal server error", nil, nil)
 			return
 		case "error_03":
-			helpers.ApiResponse(ctx, http.StatusUnauthorized, "error", "Password is incorrect", nil)
+			helpers.ApiResponse(ctx, http.StatusUnauthorized, "error", "Password is incorrect", nil, nil)
 			return
 		case "error_04":
-			helpers.ApiResponse(ctx, http.StatusInternalServerError, "error", "Internal server error", nil)
+			helpers.ApiResponse(ctx, http.StatusInternalServerError, "error", "Internal server error", nil, nil)
 			return
 		default:
-			helpers.ApiResponse(ctx, http.StatusInternalServerError, "error", "Unknown error", nil)
+			helpers.ApiResponse(ctx, http.StatusInternalServerError, "error", "Unknown error", nil, nil)
 		}
 		return
 	}
-	helpers.ApiResponse(ctx, http.StatusOK, "success", "Login successfully", res)
+
+	resData := schemas.LoginResponse{
+		ID:        res.ID,
+		Nama:      res.Nama,
+		Email:     res.Email,
+		RoleId:    res.RoleId,
+		CreatedAt: res.CreatedAt,
+		UpdatedAt: res.UpdatedAt,
+	}
+	helpers.ApiResponse(ctx, http.StatusOK, "success", "Login successfully", resData, res.Auth)
 }

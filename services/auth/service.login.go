@@ -7,6 +7,8 @@ import (
 	"github.com/arioprima/cari_kampus_api/pkg"
 	repositories "github.com/arioprima/cari_kampus_api/repositories/auth"
 	"github.com/arioprima/cari_kampus_api/schemas"
+	"log"
+	"time"
 )
 
 type ServiceLogin interface {
@@ -33,6 +35,7 @@ func (s *serviceLoginImpl) LoginService(ctx context.Context, input *schemas.Sche
 	}
 
 	configs, _ := config.LoadConfig(".")
+	log.Println("Configs", configs)
 
 	accessTokenData := map[string]interface{}{
 		"id":      res.ID,
@@ -41,7 +44,7 @@ func (s *serviceLoginImpl) LoginService(ctx context.Context, input *schemas.Sche
 		"role_id": res.RoleId,
 	}
 
-	accessToken, tokenErr := pkg.GenerateToken(accessTokenData, configs.TokenSecret, configs.TokenExpired)
+	token, tokenErr := pkg.GenerateToken(accessTokenData, configs.TokenSecret, configs.TokenExpired)
 
 	if tokenErr != nil {
 		return nil, &schemas.SchemaDatabaseError{
@@ -50,7 +53,13 @@ func (s *serviceLoginImpl) LoginService(ctx context.Context, input *schemas.Sche
 		}
 	}
 
-	res.AccessToken = accessToken
+	expired := time.Now().Add(configs.TokenExpired).Unix()
+	log.Println("Expired", expired)
+	log.Println("Expired", configs.TokenExpired)
+
+	res.Auth.AccessToken = token
+	res.Auth.Type = "Bearer"
+	res.Auth.ExpiredAt = pkg.CalculateExpiration(expired)
 
 	return res, nil
 }

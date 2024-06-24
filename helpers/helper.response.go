@@ -5,12 +5,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ApiResponse(ctx *gin.Context, Code int, Status string, Message string, Data interface{}) {
+func ApiResponse(ctx *gin.Context, Code int, Status string, Message string, Data interface{}, Auth interface{}) {
 	jsonResponse := schemas.SchemaResponses{
 		Code:    Code,
 		Status:  Status,
 		Message: Message,
 		Data:    Data,
+		Auth:    Auth,
 	}
 
 	if Code >= 400 {
