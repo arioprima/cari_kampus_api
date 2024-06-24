@@ -1,34 +1,29 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/arioprima/cari_kampus_api/config"
+	"github.com/arioprima/cari_kampus_api/routes"
+	_ "github.com/go-sql-driver/mysql"
+	"log"
 )
 
-type DataUser struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
-type Response struct {
-	Status  string   `json:"status"`
-	Message string   `json:"message"`
-	Skills  []string `json:"skills,omitempty"`
-	Data    DataUser `json:"data"`
-}
-
 func main() {
-	r := gin.Default()
-	r.GET("/user", func(c *gin.Context) {
-		response := Response{
-			Status:  "success",
-			Message: "Succsessfully Get Data",
-			Skills:  []string{"Golang", "Python", "Java"},
-			Data: DataUser{
-				Name:  "John Doe",
-				Email: "john@gmail.com",
-			},
-		}
-		c.JSON(200, response)
-	})
-	r.Run(":8080")
+	loadConfig, err := config.LoadConfig(".")
+	if err != nil {
+		log.Println("Error loading config:", err)
+		return
+	}
+
+	db, err := config.OpenConnection(&loadConfig)
+	if err != nil {
+		log.Println("Error opening database connection:", err)
+		return
+	}
+
+	router := routes.SetupAuthRoutes(db)
+
+	err = router.Run(":8081")
+	if err != nil {
+		log.Println("Could not run server:", err)
+	}
 }

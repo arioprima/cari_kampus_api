@@ -9,7 +9,7 @@ func GenerateToken(Payload interface{}, SecretJwtKey string, ttl time.Duration) 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"exp": time.Now().Add(ttl).Unix(),
 		"iat": time.Now().Unix(),
-		"jti": "unique",
+		"nbf": time.Now().Unix(),
 		"sub": Payload,
 	})
 

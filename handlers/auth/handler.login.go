@@ -19,6 +19,7 @@ func NewHandlerLogin(service services.ServiceLogin) *HandlerLogin {
 
 func (h *HandlerLogin) LoginHandler(ctx *gin.Context) {
 	var loginRequest schemas.SchemaAuth
+
 	if err := ctx.ShouldBindJSON(&loginRequest); err != nil {
 		helpers.ValidatorErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
 		return
@@ -27,26 +28,27 @@ func (h *HandlerLogin) LoginHandler(ctx *gin.Context) {
 	config := []schemas.ErrorMetaConfig{
 		{
 			Tag:     "required",
-			Field:   "email",
+			Field:   "Email",
 			Message: "Email is required",
 		},
 		{
 			Tag:     "email",
-			Field:   "email",
+			Field:   "Email",
 			Message: "Email is not valid",
 		},
 		{
 			Tag:     "required",
-			Field:   "password",
+			Field:   "Password",
 			Message: "Password is required",
 		},
 		{
 			Tag:     "min",
-			Field:   "password",
+			Field:   "Password",
 			Message: "Password must be at least 3 characters",
 			Value:   "3",
 		},
 	}
+
 	errResponse, errCount := pkg.ValidatorLogin(&loginRequest, config)
 	if errCount > 0 {
 		helpers.ValidatorErrorResponse(ctx, http.StatusBadRequest, "error", errResponse)
@@ -54,22 +56,24 @@ func (h *HandlerLogin) LoginHandler(ctx *gin.Context) {
 	}
 
 	res, err := h.Service.LoginService(ctx, &loginRequest)
-
-	switch err.Type {
-	case "error_01":
-		helpers.ApiResponse(ctx, http.StatusNotFound, "error", "Email not found", nil)
+	if err != nil {
+		switch err.Type {
+		case "error_01":
+			helpers.ApiResponse(ctx, http.StatusNotFound, "error", "Email not found", nil)
+			return
+		case "error_02":
+			helpers.ApiResponse(ctx, http.StatusInternalServerError, "error", "Internal server error", nil)
+			return
+		case "error_03":
+			helpers.ApiResponse(ctx, http.StatusUnauthorized, "error", "Password is incorrect", nil)
+			return
+		case "error_04":
+			helpers.ApiResponse(ctx, http.StatusInternalServerError, "error", "Internal server error", nil)
+			return
+		default:
+			helpers.ApiResponse(ctx, http.StatusInternalServerError, "error", "Unknown error", nil)
+		}
 		return
-	case "error_02":
-		helpers.ApiResponse(ctx, http.StatusInternalServerError, "error", "Internal server error", nil)
-		return
-	case "error_03":
-		helpers.ApiResponse(ctx, http.StatusUnauthorized, "error", "Password is incorrect", nil)
-		return
-	case "error_04":
-		helpers.ApiResponse(ctx, http.StatusInternalServerError, "error", "Internal server error", nil)
-		return
-	default:
-		helpers.ApiResponse(ctx, http.StatusOK, "success", "Login successfully", res)
 	}
-
+	helpers.ApiResponse(ctx, http.StatusOK, "success", "Login successfully", res)
 }

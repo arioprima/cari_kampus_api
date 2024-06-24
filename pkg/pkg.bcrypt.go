@@ -1,17 +1,15 @@
 package pkg
 
 import (
-	"fmt"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func HashPassword(password string) (string, error) {
-	hashPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MaxCost)
-
+func HashPassword(password string) string {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", fmt.Errorf("could not hash password %w", err)
+		panic(err) // Handle error appropriately, panic here for simplicity
 	}
-	return string(hashPassword), nil
+	return string(hashedPassword)
 }
 
 func ComparePassword(hashedPassword string, password string) error {
