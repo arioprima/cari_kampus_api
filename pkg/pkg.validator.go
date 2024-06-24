@@ -8,9 +8,9 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func ValidatorLogin(s interface{}, config []schemas.ErrorMetaConfig) (map[string]string, int) {
+func ValidatorLogin(s interface{}, config []schemas.ErrorMetaConfig) (string, int) {
 	v := validator.New()
-	errResponse := make(map[string]string)
+	errResponse := ""
 	errCount := 0
 
 	// Validate the individual fields in the struct
@@ -22,21 +22,21 @@ func ValidatorLogin(s interface{}, config []schemas.ErrorMetaConfig) (map[string
 		}
 
 		log.Printf("Validating field: %s with value: %v", cfg.Field, fieldValue)
-		if _, exists := errResponse[cfg.Field]; !exists { // Only validate if no error exists for this field
+		if errResponse == "" { // Only validate if no error exists for this field
 			switch cfg.Tag {
 			case "required":
 				if err := v.Var(fieldValue, "required"); err != nil {
-					errResponse[cfg.Field] = cfg.Message
+					errResponse = cfg.Message
 					errCount++
 				}
 			case "email":
 				if err := v.Var(fieldValue, "email"); err != nil {
-					errResponse[cfg.Field] = cfg.Message
+					errResponse = cfg.Message
 					errCount++
 				}
 			case "min":
 				if err := v.Var(fieldValue, "min="+cfg.Value); err != nil {
-					errResponse[cfg.Field] = cfg.Message
+					errResponse = cfg.Message
 					errCount++
 				}
 			}
