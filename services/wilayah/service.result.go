@@ -22,5 +22,6 @@ func NewServiceResultImpl(repository repositories.RepositoryResult) ServiceResul
 func (s *ServiceResultImpl) ResultWilayahService() (*[]models.Wilayah, schemas.SchemaDatabaseError) {
 	//TODO implement me
 	res, err := s.repository.GetWilayah()
+	//log.Println("res", res)
 	return res, err
 }
