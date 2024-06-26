@@ -18,6 +18,6 @@ func TestViper(t *testing.T) {
 	err := config.ReadInConfig()
 	assert.Nil(t, err)
 
-	assert.Equal(t, "cari_kampus_api", config.GetString("app.name"))
+	assert.Equal(t, "cari_kampus_api", config.GetString("name"))
 	assert.Equal(t, "mysql", config.GetString("database.type"))
 }
