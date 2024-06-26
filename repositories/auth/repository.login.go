@@ -2,16 +2,21 @@ package repositories
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"github.com/arioprima/cari_kampus_api/config"
 	"github.com/arioprima/cari_kampus_api/models"
 	"github.com/arioprima/cari_kampus_api/pkg"
 	"github.com/arioprima/cari_kampus_api/schemas"
 	"gorm.io/gorm"
+	"log"
 	"net/http"
+	"time"
 )
 
 type RepositoryLogin interface {
-	Login(ctx context.Context, input *schemas.SchemaAuth) (*models.ModelAuth, *schemas.SchemaDatabaseError)
+	Login(ctx context.Context, tx *gorm.DB, input *schemas.SchemaAuth) (*models.ModelAuth, *schemas.SchemaDatabaseError)
 }
 
 type repositoryLoginImpl struct {
@@ -22,15 +27,29 @@ func NewRepositoryLoginImpl(db *gorm.DB) RepositoryLogin {
 	return &repositoryLoginImpl{DB: db}
 }
 
-func (r *repositoryLoginImpl) Login(ctx context.Context, input *schemas.SchemaAuth) (*models.ModelAuth, *schemas.SchemaDatabaseError) {
-	//TODO implement me
-	var user models.ModelAuth
-	db := r.DB.WithContext(ctx).Debug().Model(&user)
+func (r *repositoryLoginImpl) Login(ctx context.Context, tx *gorm.DB, input *schemas.SchemaAuth) (*models.ModelAuth, *schemas.SchemaDatabaseError) {
+	var (
+		user models.ModelAuth
+		err  error
+	)
 
-	user.Email = input.Email
-	user.Password = input.Password
+	// Begin transaction if tx is not nil
+	if tx == nil {
+		tx = r.DB.WithContext(ctx).Debug().Begin()
+	}
 
-	if err := db.Where("email = ?", input.Email).First(&user).Error; err != nil {
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		} else if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	// Check if user exists
+	if err = tx.Where("email = ?", input.Email).Preload("UserRole").First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, &schemas.SchemaDatabaseError{
 				Code: http.StatusNotFound,
@@ -43,6 +62,7 @@ func (r *repositoryLoginImpl) Login(ctx context.Context, input *schemas.SchemaAu
 		}
 	}
 
+	// Compare passwords
 	comparePassword := pkg.ComparePassword(user.Password, input.Password)
 	if comparePassword != nil {
 		return nil, &schemas.SchemaDatabaseError{
@@ -50,6 +70,29 @@ func (r *repositoryLoginImpl) Login(ctx context.Context, input *schemas.SchemaAu
 			Type: "error_03",
 		}
 	}
+
+	// Create user session
+	configs, _ := config.LoadConfig(".")
+	hashed := sha256.New()
+	hashed.Write([]byte(configs.TokenSecret + time.Now().String()))
+	token := hex.EncodeToString(hashed.Sum(nil))
+	user.Token = token
+
+	session := models.UserSession{
+		UserID:    user.ID,
+		Token:     token,
+		LastLogin: time.Now(),
+		ExpiredAt: pkg.CalculateExpiration(time.Now().Add(configs.TokenExpired).Unix()),
+	}
+
+	if err := tx.Create(&session).Error; err != nil {
+		return nil, &schemas.SchemaDatabaseError{
+			Code: http.StatusInternalServerError,
+			Type: "error_02",
+		}
+	}
+
+	log.Println("tokenRepository", token)
 
 	return &user, nil
 }

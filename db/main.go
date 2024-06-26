@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	configPath := "../"
+	configPath := "."
 	// Load configuration
 	cfg, err := config.LoadConfig(configPath)
 	if err != nil {

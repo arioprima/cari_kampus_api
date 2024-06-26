@@ -21,8 +21,8 @@ func main() {
 	}
 
 	router := routes.SetupAuthRoutes(db)
-
-	err = router.Run(":8081")
+	port := loadConfig.PORT
+	err = router.Run(":" + port)
 	if err != nil {
 		log.Println("Could not run server:", err)
 	}

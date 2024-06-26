@@ -55,7 +55,7 @@ func (h *HandlerLogin) LoginHandler(ctx *gin.Context) {
 		return
 	}
 
-	res, err := h.Service.LoginService(ctx, &loginRequest)
+	res, err := h.Service.LoginService(ctx, nil, &loginRequest)
 	if err != nil {
 		switch err.Type {
 		case "error_01":
@@ -81,6 +81,7 @@ func (h *HandlerLogin) LoginHandler(ctx *gin.Context) {
 		Nama:      res.Nama,
 		Email:     res.Email,
 		RoleId:    res.RoleId,
+		RoleName:  res.UserRole.Nama,
 		CreatedAt: res.CreatedAt,
 		UpdatedAt: res.UpdatedAt,
 	}

@@ -7,12 +7,13 @@ import (
 	"github.com/arioprima/cari_kampus_api/pkg"
 	repositories "github.com/arioprima/cari_kampus_api/repositories/auth"
 	"github.com/arioprima/cari_kampus_api/schemas"
+	"gorm.io/gorm"
 	"log"
 	"time"
 )
 
 type ServiceLogin interface {
-	LoginService(ctx context.Context, input *schemas.SchemaAuth) (*models.ModelAuth, *schemas.SchemaDatabaseError)
+	LoginService(ctx context.Context, tx *gorm.DB, input *schemas.SchemaAuth) (*models.ModelAuth, *schemas.SchemaDatabaseError)
 }
 
 type serviceLoginImpl struct {
@@ -23,13 +24,13 @@ func NewServiceLoginImpl(repository repositories.RepositoryLogin) ServiceLogin {
 	return &serviceLoginImpl{repository: repository}
 }
 
-func (s *serviceLoginImpl) LoginService(ctx context.Context, input *schemas.SchemaAuth) (*models.ModelAuth, *schemas.SchemaDatabaseError) {
+func (s *serviceLoginImpl) LoginService(ctx context.Context, tx *gorm.DB, input *schemas.SchemaAuth) (*models.ModelAuth, *schemas.SchemaDatabaseError) {
 	//TODO implement me
 	var schema schemas.SchemaAuth
 	schema.Email = input.Email
 	schema.Password = input.Password
 
-	res, err := s.repository.Login(ctx, &schema)
+	res, err := s.repository.Login(ctx, tx, &schema)
 	if err != nil {
 		return nil, err
 	}
@@ -37,10 +38,13 @@ func (s *serviceLoginImpl) LoginService(ctx context.Context, input *schemas.Sche
 	configs, _ := config.LoadConfig(".")
 	log.Println("Configs", configs)
 
+	log.Println("test", res.Token)
+
 	accessTokenData := map[string]interface{}{
 		"id":      res.ID,
 		"email":   res.Email,
 		"nama":    res.Nama,
+		"token":   res.Token,
 		"role_id": res.RoleId,
 	}
 
@@ -53,13 +57,9 @@ func (s *serviceLoginImpl) LoginService(ctx context.Context, input *schemas.Sche
 		}
 	}
 
-	expired := time.Now().Add(configs.TokenExpired).Unix()
-	log.Println("Expired", expired)
-	log.Println("Expired", configs.TokenExpired)
-
 	res.Auth.AccessToken = token
 	res.Auth.Type = "Bearer"
-	res.Auth.ExpiredAt = pkg.CalculateExpiration(expired)
+	res.Auth.ExpiredAt = pkg.CalculateExpiration(time.Now().Add(configs.TokenExpired).Unix())
 
 	return res, nil
 }
