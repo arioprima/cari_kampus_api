@@ -9,9 +9,7 @@ import (
 	services "github.com/arioprima/cari_kampus_api/services/auth"
 )
 
-func SetupAuthRoutes(db *gorm.DB) *gin.Engine {
-	route := gin.Default()
-
+func SetupAuthRoutes(route *gin.Engine, db *gorm.DB) {
 	// Initialize dependencies
 	loginRepository := repositories.NewRepositoryLoginImpl(db)
 	loginService := services.NewServiceLoginImpl(loginRepository)
@@ -20,6 +18,4 @@ func SetupAuthRoutes(db *gorm.DB) *gin.Engine {
 	// Setup routes
 	groupRoute := route.Group("/api")
 	groupRoute.POST("/login", loginHandler.LoginHandler)
-
-	return route
 }
