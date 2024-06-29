@@ -5,15 +5,14 @@ import (
 	"github.com/arioprima/cari_kampus_api/routes"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
-	"log"
 )
 
 func main() {
 	loadConfig, err := config.LoadConfig(".")
+	log := config.NewLogger()
 	if err != nil {
 		log.Fatalf("Error loading config: %v", err)
 	}
-
 	db, err := config.OpenConnection(&loadConfig)
 	if err != nil {
 		log.Fatalf("Error opening database connection: %v", err)

@@ -9,6 +9,7 @@ import (
 	"github.com/arioprima/cari_kampus_api/models"
 	"github.com/arioprima/cari_kampus_api/pkg"
 	"github.com/arioprima/cari_kampus_api/schemas"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
@@ -20,11 +21,15 @@ type RepositoryLogin interface {
 }
 
 type repositoryLoginImpl struct {
-	DB *gorm.DB
+	DB  *gorm.DB
+	Log *logrus.Logger
 }
 
-func NewRepositoryLoginImpl(db *gorm.DB) RepositoryLogin {
-	return &repositoryLoginImpl{DB: db}
+func NewRepositoryLoginImpl(log *logrus.Logger, db *gorm.DB) RepositoryLogin {
+	return &repositoryLoginImpl{
+		DB:  db,
+		Log: log,
+	}
 }
 
 func (r *repositoryLoginImpl) Login(ctx context.Context, tx *gorm.DB, input *schemas.SchemaAuth) (*models.ModelAuth, *schemas.SchemaDatabaseError) {

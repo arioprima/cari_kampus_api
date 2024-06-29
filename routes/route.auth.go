@@ -11,8 +11,8 @@ import (
 
 func SetupAuthRoutes(route *gin.Engine, db *gorm.DB) {
 	// Initialize dependencies
-	loginRepository := repositories.NewRepositoryLoginImpl(db)
-	loginService := services.NewServiceLoginImpl(loginRepository)
+	loginRepository := repositories.NewRepositoryLoginImpl(nil, db)
+	loginService := services.NewServiceLoginImpl(loginRepository, nil)
 	loginHandler := handlers.NewHandlerLogin(loginService)
 
 	// Setup routes

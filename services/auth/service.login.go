@@ -7,6 +7,7 @@ import (
 	"github.com/arioprima/cari_kampus_api/pkg"
 	repositories "github.com/arioprima/cari_kampus_api/repositories/auth"
 	"github.com/arioprima/cari_kampus_api/schemas"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"log"
 	"time"
@@ -18,10 +19,14 @@ type ServiceLogin interface {
 
 type serviceLoginImpl struct {
 	repository repositories.RepositoryLogin
+	Log        *logrus.Logger
 }
 
-func NewServiceLoginImpl(repository repositories.RepositoryLogin) ServiceLogin {
-	return &serviceLoginImpl{repository: repository}
+func NewServiceLoginImpl(repository repositories.RepositoryLogin, logger *logrus.Logger) ServiceLogin {
+	return &serviceLoginImpl{
+		repository: repository,
+		Log:        logger,
+	}
 }
 
 func (s *serviceLoginImpl) LoginService(ctx context.Context, tx *gorm.DB, input *schemas.SchemaAuth) (*models.ModelAuth, *schemas.SchemaDatabaseError) {
@@ -32,6 +37,7 @@ func (s *serviceLoginImpl) LoginService(ctx context.Context, tx *gorm.DB, input 
 
 	res, err := s.repository.Login(ctx, tx, &schema)
 	if err != nil {
+		s.Log.Error(err)
 		return nil, err
 	}
 
