@@ -1,7 +1,8 @@
 package middlewares
 
 import (
-	repositories "github.com/arioprima/cari_kampus_api/repositories/role"
+	authRepositories "github.com/arioprima/cari_kampus_api/repositories/auth"
+	roleRepositories "github.com/arioprima/cari_kampus_api/repositories/role"
 	"github.com/arioprima/cari_kampus_api/schemas"
 	"net/http"
 	"strings"
@@ -26,7 +27,7 @@ func AuthMiddleware(userRole string) gin.HandlerFunc {
 		authorizationHeader := ctx.GetHeader("Authorization")
 		fields := strings.Fields(authorizationHeader)
 		if len(fields) != 2 || fields[0] != "Bearer" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse)
+			ctx.AbortWithStatusJSON(http.StatusForbidden, errorResponse)
 			return
 		}
 		token = fields[1]
@@ -60,9 +61,52 @@ func AuthMiddleware(userRole string) gin.HandlerFunc {
 			errorResponse = schemas.SchemaErrorResponse{
 				Code:   http.StatusUnauthorized,
 				Status: "Unauthorized",
-				Error:  "Invalid token",
+				Error:  err.Error(),
 			}
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse)
+			return
+		}
+		userId, ok := sub.(map[string]interface{})["id"].(string)
+		if !ok {
+			errorResponse = schemas.SchemaErrorResponse{
+				Code:   http.StatusForbidden,
+				Status: "Forbidden",
+				Error:  "User ID not found in token claims",
+			}
+			ctx.AbortWithStatusJSON(http.StatusForbidden, errorResponse)
+			return
+		}
+
+		userToken, ok := sub.(map[string]interface{})["token"].(string)
+		if !ok {
+			errorResponse = schemas.SchemaErrorResponse{
+				Code:   http.StatusForbidden,
+				Status: "Forbidden",
+				Error:  "Token not found in token claims",
+			}
+			ctx.AbortWithStatusJSON(http.StatusForbidden, errorResponse)
+			return
+		}
+
+		// Check if user is logged in another device
+		tokenById, err := authRepositories.FinByToken(userId, db)
+		if err != nil {
+			errorResponse = schemas.SchemaErrorResponse{
+				Code:   http.StatusForbidden,
+				Status: "Forbidden",
+				Error:  "User token not found",
+			}
+			ctx.AbortWithStatusJSON(http.StatusForbidden, errorResponse)
+			return
+		}
+
+		if userToken != tokenById {
+			errorResponse = schemas.SchemaErrorResponse{
+				Code:   http.StatusForbidden,
+				Status: "Forbidden",
+				Error:  "You are logged in another device",
+			}
+			ctx.AbortWithStatusJSON(http.StatusForbidden, errorResponse)
 			return
 		}
 
@@ -78,7 +122,7 @@ func AuthMiddleware(userRole string) gin.HandlerFunc {
 		}
 
 		// Get role name by role ID
-		roleName, err := repositories.GetRoleNameById(userRole, db)
+		roleName, err := roleRepositories.GetRoleNameById(userRole, db)
 		if err != nil {
 			errorResponse = schemas.SchemaErrorResponse{
 				Code:   http.StatusNotFound,

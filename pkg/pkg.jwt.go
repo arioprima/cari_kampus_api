@@ -24,16 +24,23 @@ func GenerateToken(Payload interface{}, SecretJwtKey string, ttl time.Duration) 
 }
 
 func ValidateToken(token string, signedJWTKey string) (interface{}, error) {
-	tok, _ := jwt.Parse(token, func(jwtToken *jwt.Token) (interface{}, error) {
+	tok, err := jwt.Parse(token, func(jwtToken *jwt.Token) (interface{}, error) {
 		if _, ok := jwtToken.Method.(*jwt.SigningMethodHMAC); !ok {
+			logrus.Info(jwtToken.Header["alg"])
 			return nil, fmt.Errorf("unexpected signing method: %v", jwtToken.Header["alg"])
 		}
 		return []byte(signedJWTKey), nil
 	})
 
+	if err != nil {
+		logrus.Error(err)
+		return nil, err
+	}
+
 	claims, ok := tok.Claims.(jwt.MapClaims)
 	if !ok || !tok.Valid {
 		logrus.Error("token is invalid")
 	}
+	logrus.Info(claims["sub"])
 	return claims["sub"], nil
 }
